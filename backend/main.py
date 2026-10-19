@@ -3,6 +3,8 @@ from dotenv import load_dotenv
 from fastapi import FastAPI, File, HTTPException, UploadFile
 from openai import OpenAI
 from pydantic import BaseModel
+from pydantic import Field
+import recipe_search
 
 load_dotenv()
 client = OpenAI()
@@ -17,6 +19,9 @@ class IngredientResult(BaseModel):
     reason: str
     ingredients: list[str]
 
+class SearchRequest(BaseModel):
+    ingredients: list[str] = Field(min_length=1, max_length=30)
+    top_k: int = Field(default=5, ge=1, le=20)
 
 @app.get("/")
 async def root():
@@ -64,3 +69,12 @@ async def extract_ingredients(file: UploadFile = File(...)):
     )
 
     return response.output_parsed
+
+@app.post("/search-recipes")
+def search_recipes(request: SearchRequest):
+    try:
+        return recipe_search.search(request.ingredients, request.top_k)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception:
+        raise HTTPException(status_code=502, detail="Recipe search is unavailable right now. Please try again.")
