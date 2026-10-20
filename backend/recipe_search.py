@@ -13,10 +13,17 @@ EMBED_MODEL = "text-embedding-3-small"
 DB_PATH = Path(__file__).resolve().parent / "db" / "kitchen.db"
 STAPLES = {"water", "salt", "pepper", "black pepper"}
 
+# Dish types where a savoury-cuisine guess makes no sense (hide the tag for these)
+NO_CUISINE_CATEGORIES = {
+    "Dessert", "Beverages", "Breads", "Quick Breads", "Pie", "Cheesecake",
+    "Frozen Desserts", "Bar Cookie", "Candy", "Cookie & Brownies", "Drop Cookies",
+}
+
 # ---- runs once, when the server imports this file ----
 _conn = sqlite3.connect(DB_PATH)
 _rows = _conn.execute("""
-    SELECT r.recipe_id, r.name, r.calories, r.ingredients, e.embedding
+    SELECT r.recipe_id, r.name, r.calories, r.category, r.cuisine_pred,
+           r.ingredients, e.embedding
     FROM recipes r
     JOIN recipe_embeddings e ON e.recipe_id = r.recipe_id
 """).fetchall()
@@ -25,8 +32,10 @@ _conn.close()
 IDS = [row[0] for row in _rows]
 NAMES = [row[1] for row in _rows]
 CALORIES = [row[2] for row in _rows]
-RECIPE_ITEMS = [json.loads(row[3]) for row in _rows]
-MATRIX = np.vstack([np.frombuffer(row[4], dtype=np.float32) for row in _rows])
+CATEGORIES = [row[3] for row in _rows]
+CUISINES = [row[4] for row in _rows]
+RECIPE_ITEMS = [json.loads(row[5]) for row in _rows]
+MATRIX = np.vstack([np.frombuffer(row[6], dtype=np.float32) for row in _rows])
 MATRIX = MATRIX / np.linalg.norm(MATRIX, axis=1, keepdims=True)
 print("Recipe search ready:", MATRIX.shape)
 
@@ -81,6 +90,8 @@ def search(ingredients, top_k=5):
             "recipe_id": IDS[i],
             "name": NAMES[i],
             "calories": CALORIES[i],
+            "category": CATEGORIES[i],
+            "cuisine_guess": None if CATEGORIES[i] in NO_CUISINE_CATEGORIES else CUISINES[i],
             "score": round(float(scores[i]), 3),
             "have": have,
             "assumed_at_home": staples,
