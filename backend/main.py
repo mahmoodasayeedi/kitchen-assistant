@@ -8,6 +8,7 @@ import recipe_search
 from fastapi.middleware.cors import CORSMiddleware
 from typing import Literal
 import chat_agent
+from fastapi import Query
 
 load_dotenv()
 client = OpenAI()
@@ -119,3 +120,25 @@ def chat(request: ChatRequest):
     except Exception:
         raise HTTPException(status_code=502, detail="The assistant is unavailable right now. Please try again.")
     return {"reply": reply, "recipes": recipes}
+
+@app.get("/recipes")
+def list_recipes(
+    q: str = "",
+    category: str = "",
+    max_minutes: int | None = Query(None, ge=1),
+    with_photo: bool = False,
+    page: int = Query(1, ge=1),
+    limit: int = Query(24, ge=1, le=60),
+):
+    return recipe_search.browse(
+        q=q.strip(),
+        category=category,
+        max_minutes=max_minutes,
+        with_photo=with_photo,
+        limit=limit,
+        offset=(page - 1) * limit,
+    )
+
+@app.get("/categories")
+def list_categories():
+    return recipe_search.categories()
