@@ -59,9 +59,10 @@ export default function Recipes() {
 
   return (
     <div>
-      <h1>All recipes</h1>
-      <p className="sub">Browse real recipes. Click one to see the full steps.</p>
-
+      <center>
+      <h1>Discover Your Next Favorite 🍽️</h1>
+      <p className="sub">Explore our recipe collection and select any dish to discover its ingredients and step-by-step instructions.</p>
+        </center>
       <div className="filters">
         <input
           className="grow"
