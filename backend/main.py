@@ -10,17 +10,22 @@ from typing import Literal
 import chat_agent
 from fastapi import Query
 import meal_planner
+import os
 
 load_dotenv()
 client = OpenAI()
 app = FastAPI()
 
 ALLOWED_TYPES = {"image/jpeg", "image/png", "image/webp"}
-MAX_SIZE = 5 * 1024 * 1024  # 5 MB
+MAX_SIZE = 4 * 1024 * 1024  # 4 MB
+
+ORIGINS = ["http://localhost:5173", "http://127.0.0.1:5173"] + [
+    o.strip() for o in os.getenv("FRONTEND_ORIGINS", "").split(",") if o.strip()
+]
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173", "http://127.0.0.1:5173"],
+    allow_origins=ORIGINS,
     allow_methods=["*"],
     allow_headers=["*"],
 )

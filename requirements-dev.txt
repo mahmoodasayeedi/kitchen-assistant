@@ -1,0 +1,6 @@
+﻿-r requirements.txt
+fastapi-cli==0.0.32
+uvicorn==0.54.0
+pandas==3.0.6
+scikit-learn==1.9.1
+joblib==1.6.0

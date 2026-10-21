@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { API, errorText } from "../api";
 
 const ALLOWED = ["image/jpeg", "image/png", "image/webp"];
-const MAX_BYTES = 5 * 1024 * 1024;
+const MAX_BYTES = 4 * 1024 * 1024; // Vercel limits request bodies to 4.5 MB
 
 const SUB_LABELS = [
   ["presentation", "Presentation"],
@@ -100,7 +100,7 @@ export default function Reviewer() {
       return;
     }
     if (f.size > MAX_BYTES) {
-      setError("That image is too large (max 5 MB).");
+      setError("That image is too large (max 4 MB).");
       return;
     }
     setFile(f);
@@ -161,7 +161,7 @@ export default function Reviewer() {
                 <div className="drop-empty">
                   <div className="panel-emoji">📸</div>
                   <strong>Drop a photo here, or click to choose</strong>
-                  <span className="small">JPEG, PNG or WebP, up to 5 MB</span>
+                  <span className="small">JPEG, PNG or WebP, up to 4 MB</span>
                 </div>
               )}
               <input

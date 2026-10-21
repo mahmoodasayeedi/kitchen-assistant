@@ -1,4 +1,5 @@
-export const API = "http://127.0.0.1:8000";
+// Set VITE_API_URL on Vercel; falls back to the local backend.
+export const API = import.meta.env.VITE_API_URL || "http://127.0.0.1:8000";
 
 export function errorText(data, fallback) {
   if (data && typeof data.detail === "string") return data.detail;
