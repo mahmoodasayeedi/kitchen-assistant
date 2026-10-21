@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { API, errorText, formatTime } from "../api";
+import useVoice from "../useVoice";
 
 const SUGGESTIONS = [
   "Plan breakfast only for 3 days.",
@@ -131,6 +132,10 @@ export default function Planner() {
   const [error, setError] = useState("");
   const chatBox = useRef(null);
 
+  const { listening, voiceNote, toggleVoice } = useVoice((text) =>
+    setDraft((d) => (d ? d + " " : "") + text)
+  );
+
   useEffect(() => {
     if (chatBox.current) chatBox.current.scrollTop = chatBox.current.scrollHeight;
   }, [messages, loading]);
@@ -201,15 +206,26 @@ export default function Planner() {
               )}
               {loading && <div className="bubble assistant">Planning...</div>}
             </div>
+
             <div className="row">
+              <button
+                type="button"
+                className={`mic ${listening ? "listening" : ""}`}
+                onClick={toggleVoice}
+                title={listening ? "Stop listening" : "Speak your request"}
+                aria-label={listening ? "Stop listening" : "Speak your request"}
+              >
+                🎤
+              </button>
               <input
                 value={draft}
                 onChange={(e) => setDraft(e.target.value)}
                 onKeyDown={(e) => e.key === "Enter" && submit(draft)}
-                placeholder="For example: dinners for 4 days, no fish"
+                placeholder={listening ? "Listening..." : "For example: dinners for 4 days, no fish"}
               />
               <button className="primary" onClick={() => submit(draft)} disabled={loading}>Send</button>
             </div>
+            {voiceNote && <div className="note">{voiceNote}</div>}
           </div>
           {error && <div className="error">{error}</div>}
         </div>

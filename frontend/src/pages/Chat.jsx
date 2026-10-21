@@ -279,7 +279,7 @@ useEffect(() => () => recogRef.current?.abort(), []);
             📎
             <input type="file" hidden accept="image/jpeg,image/png,image/webp" onChange={uploadPhoto} />
           </label>
-          <button
+        <button
   type="button"
   className={`mic ${listening ? "listening" : ""}`}
   onClick={toggleVoice}
