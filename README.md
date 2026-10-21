@@ -10,12 +10,12 @@ Built for the Ironhack AI Engineering bootcamp with **React (Vite)**, **FastAPI*
 
 ## Features
 
-| Tab | What it does |
-|---|---|
-| **All recipes** | Browse 8,761 real recipes with photos. Search by name, filter by category and cooking time, open any recipe for the full ingredients and steps. |
+| Tab                     | What it does                                                                                                                                                                                                                                        |
+| ----------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **All recipes**         | Browse 8,761 real recipes with photos. Search by name, filter by category and cooking time, open any recipe for the full ingredients and steps.                                                                                                     |
 | **AI Recipe Generator** | Chat with the assistant. Upload a fridge photo (ingredients are read by a vision model and are editable) or just type an idea. The assistant asks short questions, then writes a recipe. Similar real recipes from the database are shown below it. |
-| **AI Meal Planner** | Say how many days (1–7) and which meals (breakfast, lunch, dinner). The assistant builds a plan shown as day cards, and you can ask it to change the plan. Printable. |
-| **AI Dish Reviewer** | Upload a photo of the dish you cooked. Get an overall score, five sub-scores, strengths, improvements and tips. |
+| **AI Meal Planner**     | Say how many days (1–7) and which meals (breakfast, lunch, dinner). The assistant builds a plan shown as day cards, and you can ask it to change the plan. Printable.                                                                               |
+| **AI Dish Reviewer**    | Upload a photo of the dish you cooked. Get an overall score, five sub-scores, strengths, improvements and tips.                                                                                                                                     |
 
 No sign-in is needed. The server stores nothing about users; the browser sends the chat history with each request.
 
@@ -37,7 +37,7 @@ React (Vite)  ──fetch──►  FastAPI  ──►  OpenAI (vision, structur
 - **Data:** the Food.com recipes dataset (from Kaggle), cleaned and loaded into SQLite: 8,761 recipes after removing duplicates, batch-style entries and implausible calorie values.
 - **Embeddings:** one 1,536-number vector per recipe, stored as a float32 BLOB and loaded into memory once at start-up. Search is a single matrix multiplication.
 - **Cuisine classifier:** TF-IDF + Linear SVC on ingredients. Accuracy about 0.78, macro F1 about 0.70.
-- **Calorie model:** [fill in: model, MAE and R², and the baseline you compared with]. It did not clearly beat the baseline, so the app shows the dataset's own calorie values rather than predictions.
+- Calorie model: Random Forest, validation MAE 160.6 kcal and R² 0.109 (6,577 training and 1,645 validation recipes). The baseline, which always predicts the median, had MAE 172.2 kcal and R² -0.037. Ridge regression scored MAE 161.5 and R² 0.110. The model beat the baseline by only about 12 kcal, and its biggest misses were high-calorie recipes with few ingredients, such as Wasabi Aioli (932 actual vs 163 predicted). So the app shows the dataset’s own calorie values rather than predictions.
 - **Clustering and map:** KMeans + PCA / t-SNE over the recipe vectors. The map data is saved in `backend/models/recipe_map.json`.
 
 ## Safety and honesty
@@ -45,23 +45,23 @@ React (Vite)  ──fetch──►  FastAPI  ──►  OpenAI (vision, structur
 - AI recipes, plans and reviews are always labelled as AI-generated and "not tested by cooks".
 - Prompts include safe cooking temperatures and a food-safety note.
 - Text from users, photos and recipes is treated as **data, not instructions** (prompt-injection defence).
-- Inputs are validated: image type and size (max 5 MB), list lengths, message lengths.
+- Inputs are validated: image type and size (max 4 MB), list lengths, message lengths.
 - The dish reviewer judges appearance only. It does not claim a dish is cooked through or safe to eat.
 - The OpenAI key lives only in `backend/.env`, which is git-ignored.
 
 ## API routes
 
-| Method | Route | Purpose |
-|---|---|---|
-| GET | `/health` | Health check |
-| POST | `/extract-ingredients` | Fridge photo → ingredient list |
-| POST | `/search-recipes` | Ingredients → closest real recipes |
-| GET | `/recipes` | Browse recipes (search, category, time, photo filter, paging) |
-| GET | `/recipes/{id}` | One recipe with ingredients and steps |
-| GET | `/categories` | Category list for the filter |
-| POST | `/chat` | AI Recipe Generator turn: reply, recipe, similar recipes |
-| POST | `/meal-plan` | AI Meal Planner turn: reply and plan |
-| POST | `/review-dish` | AI Dish Reviewer: photo → scores and feedback |
+| Method | Route                  | Purpose                                                       |
+| ------ | ---------------------- | ------------------------------------------------------------- |
+| GET    | `/health`              | Health check                                                  |
+| POST   | `/extract-ingredients` | Fridge photo → ingredient list                                |
+| POST   | `/search-recipes`      | Ingredients → closest real recipes                            |
+| GET    | `/recipes`             | Browse recipes (search, category, time, photo filter, paging) |
+| GET    | `/recipes/{id}`        | One recipe with ingredients and steps                         |
+| GET    | `/categories`          | Category list for the filter                                  |
+| POST   | `/chat`                | AI Recipe Generator turn: reply, recipe, similar recipes      |
+| POST   | `/meal-plan`           | AI Meal Planner turn: reply and plan                          |
+| POST   | `/review-dish`         | AI Dish Reviewer: photo → scores and feedback                 |
 
 Interactive docs: `http://127.0.0.1:8000/docs`
 
@@ -133,4 +133,4 @@ Open `http://localhost:5173`.
 ## Credits
 
 - Recipes: Food.com dataset on Kaggle (educational use).
-- Landing-page photos: [add the sources and photographers here].
+- Landing-page photos: Google Images
