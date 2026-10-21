@@ -11,6 +11,7 @@ import chat_agent
 from fastapi import Query
 import meal_planner
 import os
+import shopping
 
 load_dotenv()
 client = OpenAI()
@@ -282,3 +283,21 @@ async def review_dish(
     result["score"] = _clamp(result["score"])
     result["sub_scores"] = {k: _clamp(v) for k, v in result["sub_scores"].items()}
     return result
+class ShoppingMeal(BaseModel):
+    title: str = Field(max_length=100)
+    description: str = Field(default="", max_length=300)
+
+
+class ShoppingRequest(BaseModel):
+    meals: list[ShoppingMeal] = Field(min_length=1, max_length=21)
+
+
+@app.post("/shopping-list")
+def make_shopping_list(request: ShoppingRequest):
+    try:
+        return shopping.build_list([m.model_dump() for m in request.meals])
+    except Exception:
+        raise HTTPException(
+            status_code=502,
+            detail="Could not build the shopping list. Please try again.",
+        )

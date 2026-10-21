@@ -560,3 +560,55 @@ aside.sidebar .side-item.brand:hover { background: transparent; }
   aside.sidebar .side-item.active::before { display: none; }
 }
 @media (prefers-reduced-motion: reduce) { .live-ping { animation: none; } }
+
+.plan-head .actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.shoplist {
+  margin-top: 16px;
+  padding: 14px;
+  border-radius: 14px;
+  background: var(--linen-card);
+  border: 1px solid rgba(47, 82, 56, 0.15);
+}
+
+.shoplist h4 {
+  margin: 0 0 6px;
+}
+
+.aislename {
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--brand);
+  margin: 12px 0 4px;
+}
+
+.shopitem {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 0;
+  cursor: pointer;
+}
+
+.shopitem input {
+  accent-color: var(--brand);
+  width: 16px;
+  height: 16px;
+}
+
+.shopitem .qty {
+  margin-left: auto;
+  color: #6b6b6b;
+  font-size: 0.85rem;
+}
+
+.shopitem.done span {
+  text-decoration: line-through;
+  opacity: 0.55;
+}

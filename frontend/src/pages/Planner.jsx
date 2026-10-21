@@ -27,11 +27,59 @@ function historyFor(messages) {
 }
 
 function PlanView({ plan }) {
+  const [list, setList] = useState(null);
+  const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState("");
+  const [ticked, setTicked] = useState({});
+
+  useEffect(() => {
+    setList(null);
+    setErr("");
+    setTicked({});
+  }, [plan]);
+
+  async function makeList() {
+    if (busy) return;
+    setBusy(true);
+    setErr("");
+    try {
+      const meals = plan.days
+        .flatMap((d) => d.meals)
+        .slice(0, 21)
+        .map((m) => ({ title: m.title.slice(0, 100), description: (m.description || "").slice(0, 300) }));
+      const res = await fetch(`${API}/shopping-list`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ meals }),
+      });
+      const data = await res.json().catch(() => null);
+      if (!res.ok) {
+        setErr(errorText(data, "Could not build the shopping list. Please try again."));
+        return;
+      }
+      setList(data);
+      setTicked({});
+    } catch {
+      setErr("Cannot reach the server. Is the backend running?");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  function toggle(key) {
+    setTicked((t) => ({ ...t, [key]: !t[key] }));
+  }
+
   return (
     <div className="plan">
       <div className="plan-head">
         <h3>{plan.title}</h3>
-        <button className="primary" onClick={() => window.print()}>🖨 Print plan</button>
+        <div className="actions">
+          <button className="primary" onClick={makeList} disabled={busy}>
+            {busy ? "Building..." : "🛒 Shopping list"}
+          </button>
+          <button className="primary" onClick={() => window.print()}>🖨 Print plan</button>
+        </div>
       </div>
       {plan.days.map((d) => (
         <div className="dayblock" key={d.day}>
@@ -48,6 +96,29 @@ function PlanView({ plan }) {
           </div>
         </div>
       ))}
+
+      {err && <div className="error">{err}</div>}
+      {list && (
+        <div className="shoplist">
+          <h4>🛒 Shopping list</h4>
+          {list.aisles.map((a) => (
+            <div className="aisle" key={a.name}>
+              <div className="aislename">{a.name}</div>
+              {a.items.map((it, i) => {
+                const key = `${a.name}-${i}`;
+                return (
+                  <label className={`shopitem ${ticked[key] ? "done" : ""}`} key={key}>
+                    <input type="checkbox" checked={!!ticked[key]} onChange={() => toggle(key)} />
+                    <span>{it.name}</span>
+                    <span className="qty">{it.quantity}</span>
+                  </label>
+                );
+              })}
+            </div>
+          ))}
+        </div>
+      )}
+
       <p className="small">AI-generated plan. Check ingredients and allergies before cooking.</p>
     </div>
   );
