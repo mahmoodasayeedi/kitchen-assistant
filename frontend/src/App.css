@@ -435,3 +435,128 @@ textarea.dish-input { resize: none; font: inherit; }
 @media (max-width: 1100px) {
   .review-grid, .feedback-grid, .tipsrow { grid-template-columns: 1fr; }
 }
+
+/* =====================================================================
+   PREMIUM DASHBOARD THEME  (keep this block LAST in the file)
+   ===================================================================== */
+:root {
+  --brand: #2f5238;        /* one dark green: sidebar AND primary buttons */
+  --brand-hover: #244230;
+  --gold: #e8a33d;         /* warm amber highlight */
+  --linen: #f3ede1;        /* page canvas */
+  --linen-card: #f8f3e8;   /* chat/workspace surfaces */
+}
+body { background: var(--linen); }
+.main { background: var(--linen); }
+
+/* ---- One green everywhere ---- */
+.primary { background: var(--brand); }
+.primary:hover:not(:disabled) { background: var(--brand-hover); }
+.bubble.user { background: var(--brand); }
+.stepnum, .daytitle { background: var(--brand); }
+.suggest button:hover { border-color: var(--gold); }
+
+/* ---- Softer workspace surfaces ---- */
+.card { background: var(--linen-card); border-color: #e6dcc7; }
+.chatcard, .uploadcard { background: var(--linen-card); }
+.recipepanel { background: var(--linen-card); border-color: #e6dcc7; }
+
+/* ---- Sidebar ---- */
+aside.sidebar {
+  width: 236px;
+  display: flex;
+  flex-direction: column;
+  padding: 18px 14px 16px;
+  background: linear-gradient(180deg, #34593d 0%, var(--brand) 55%, #264430 100%);
+  color: #fff;
+  border-radius: 0 28px 28px 0;
+  box-shadow: 6px 0 28px rgba(31, 52, 38, 0.18);
+}
+aside.sidebar nav { display: block; }
+.side-group-block { margin-bottom: 6px; }
+.side-group {
+  margin: 20px 14px 8px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.42);
+}
+
+aside.sidebar .side-item {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  margin: 0 0 4px;
+  padding: 11px 14px;
+  border: 1px solid transparent;      /* no divider lines */
+  border-bottom: 1px solid transparent;
+  border-radius: 16px;                /* pill */
+  background: transparent;
+  color: rgba(255, 255, 255, 0.78);
+  font-size: 14.5px;
+  font-weight: 500;
+  transition: background 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+}
+aside.sidebar .side-item:hover { background: rgba(255, 255, 255, 0.06); color: #fff; }
+aside.sidebar .side-item.active {
+  background: rgba(255, 255, 255, 0.1);           /* glass overlay */
+  border-color: rgba(255, 255, 255, 0.18);        /* faint sharp border */
+  backdrop-filter: blur(8px);
+  color: #fff;
+  font-weight: 600;
+}
+aside.sidebar .side-item.active::before {         /* gold indicator */
+  content: "";
+  position: absolute;
+  left: -14px;
+  top: 50%;
+  width: 4px;
+  height: 22px;
+  transform: translateY(-50%);
+  border-radius: 0 4px 4px 0;
+  background: var(--gold);
+}
+.side-svg { flex-shrink: 0; color: rgba(255, 255, 255, 0.7); transition: color 0.2s ease; }
+aside.sidebar .side-item:hover .side-svg { color: #fff; }
+aside.sidebar .side-item.active .side-svg { color: var(--gold); }
+
+aside.sidebar .side-item.brand { margin: 0 0 6px; padding: 6px 8px; font-size: 16px; font-weight: 700; letter-spacing: -0.01em; }
+aside.sidebar .side-item.brand:hover { background: transparent; }
+.brand-mark { width: 36px; height: 36px; border-radius: 12px; background: var(--gold); color: var(--brand); display: grid; place-items: center; flex-shrink: 0; }
+
+/* ---- Guest Mode status card, anchored at the bottom ---- */
+.guest-card {
+  margin-top: auto;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+}
+.guest-title { font-size: 13.5px; font-weight: 700; }
+.guest-sub { font-size: 12px; color: rgba(255, 255, 255, 0.6); }
+.live { position: relative; width: 10px; height: 10px; flex-shrink: 0; }
+.live-dot, .live-ping { position: absolute; inset: 0; border-radius: 50%; background: #4ade80; }
+.live-ping { opacity: 0.75; animation: ping 1.6s cubic-bezier(0, 0, 0.2, 1) infinite; }
+@keyframes ping { 75%, 100% { transform: scale(2.4); opacity: 0; } }
+
+@media (min-width: 761px) {
+  aside.sidebar, aside.sidebar:hover, aside.sidebar:focus-within { width: 236px; }
+  .main { margin-left: 236px; }
+}
+
+/* ---- Phone: bottom icon bar ---- */
+@media (max-width: 760px) {
+  aside.sidebar { flex-direction: row; border-radius: 20px 20px 0 0; padding: 6px 8px; }
+  aside.sidebar nav { display: flex; width: 100%; justify-content: space-around; }
+  .side-group-block { display: contents; }
+  .side-group, .guest-card, aside.sidebar .side-item.brand, .side-label { display: none; }
+  aside.sidebar .side-item { width: auto; margin: 0; padding: 10px 16px; }
+  aside.sidebar .side-item.active::before { display: none; }
+}
+@media (prefers-reduced-motion: reduce) { .live-ping { animation: none; } }
