@@ -1,6 +1,6 @@
 # AI Kitchen Assistant 🍳
 
-Turn the ingredients you already have into dinner. Upload a photo of your fridge or describe what you feel like cooking, and the app creates a recipe, plans your meals, builds a shopping list, and reviews the dish you cooked. Real recipes written by real cooks are shown next to the AI's suggestions.
+Turn the ingredients you already have into dinner. Upload a photo of your fridge, or type or say what you feel like cooking, and the app creates a recipe, plans your meals, builds a shopping list, and reviews the dish you cooked. Real recipes written by real cooks are shown next to the AI's suggestions.
 
 > **Idea in one line:** AI creates, real recipes validate.
 
@@ -20,8 +20,8 @@ The first request after a quiet period can take a few seconds while the server w
 | Tab                     | What it does                                                                                                                                                                                                                                        |
 | ----------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | **All recipes**         | Browse 8,761 real recipes with photos. Search by name, filter by category and cooking time, open any recipe for the full ingredients and steps.                                                                                                     |
-| **AI Recipe Generator** | Chat with the assistant. Upload a fridge photo (ingredients are read by a vision model and are editable) or just type an idea. The assistant asks short questions, then writes a recipe. Similar real recipes from the database are shown below it. |
-| **AI Meal Planner**     | Say how many days (1–7) and which meals (breakfast, lunch, dinner). The assistant builds a plan shown as day cards, and you can ask it to change the plan. Printable. **Shopping list:** one click merges the plan's ingredients, adds up duplicates, groups them by aisle (Produce, Dairy, Pantry...) and gives a checklist you can tick off. |
+| **AI Recipe Generator** | Chat with the assistant. Upload a fridge photo (ingredients are read by a vision model and are editable), type an idea, or **speak it with the 🎤 button**. The assistant asks short questions, then writes a recipe. Similar real recipes from the database are shown below it. |
+| **AI Meal Planner**     | Type or speak (🎤) how many days (1–7) and which meals (breakfast, lunch, dinner). The assistant builds a plan shown as day cards, and you can ask it to change the plan. Printable. **Shopping list:** one click merges the plan's ingredients, adds up duplicates, groups them by aisle (Produce, Dairy, Pantry...) and gives a checklist you can tick off. |
 | **AI Dish Reviewer**    | Upload a photo of the dish you cooked. Get an overall score, five sub-scores, strengths, improvements and tips.                                                                                                                                     |
 
 No sign-in is needed. The server stores nothing about users; the browser sends the chat history with each request.
@@ -38,6 +38,7 @@ React (Vite)  ──fetch──►  FastAPI  ──►  OpenAI (vision, structur
 2. **Chat → recipe:** the model returns a structured turn (`reply` + optional `recipe`). It asks at most two short questions, then writes the recipe.
 3. **Similar real recipes:** the AI recipe's ingredients are turned into an embedding (`text-embedding-3-small`) and compared with the stored recipe embeddings using cosine similarity. The closest matches are shown, with what you have and what you'd need to buy.
 4. **Meal planner, shopping list and dish reviewer:** each uses its own structured-output schema, so the page always receives clean fields. The shopping list is a separate call: the plan's meals go in, and one merged list grouped by aisle comes back.
+5. **Voice input:** the 🎤 button in the Recipe Generator and Meal Planner uses the browser's built-in speech recognition (Web Speech API). The recognised words are put into the message box, not sent automatically, so you can fix mistakes first. After that they follow exactly the same path as typed text. The shared logic lives in one React hook, `frontend/src/useVoice.js`.
 
 ## Data and machine learning
 
@@ -55,6 +56,7 @@ React (Vite)  ──fetch──►  FastAPI  ──►  OpenAI (vision, structur
 - Inputs are validated: image type and size (max 4 MB), list lengths, message lengths.
 - The dish reviewer judges appearance only. It does not claim a dish is cooked through or safe to eat.
 - Shopping-list quantities are estimates for one serving per meal, so check amounts before shopping.
+- Spoken text is treated like typed text: it lands in the message box first, and it goes through the same validation and prompt-injection defence. The backend never receives audio.
 - The OpenAI key lives only in `backend/.env` (git-ignored) on a local machine. On Vercel it is set as an environment variable and is never committed.
 
 ## API routes
@@ -94,7 +96,7 @@ kitchen-assistant/
 │   ├── public/food/          # landing-page photos
 │   └── src/
 │       ├── App.jsx, App.css
-│       ├── api.js, RecipeModal.jsx
+│       ├── api.js, useVoice.js, RecipeModal.jsx
 │       └── pages/            # Landing, Recipes, Chat, Planner, Reviewer
 └── README.md
 ```
@@ -156,6 +158,7 @@ The app runs as two Vercel projects connected to the same GitHub repository:
 - Ingredient matching works on whole words and does not fix spelling mistakes.
 - The model name is set in `main.py`, `chat_agent.py`, `meal_planner.py` and `shopping.py`.
 - Shopping-list amounts are estimates, because meal plans do not include quantities.
+- Voice input works in Chrome and Edge (not Firefox), needs microphone permission, and is set to English. The browser's speech service does the recognition, so it needs an internet connection.
 - No user accounts, so nothing is saved between visits.
 
 ## Credits
