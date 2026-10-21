@@ -1,4 +1,4 @@
-﻿-r requirements.txt
+-r requirements.txt
 fastapi-cli==0.0.32
 uvicorn==0.54.0
 pandas==3.0.6
