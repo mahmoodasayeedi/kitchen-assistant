@@ -1,191 +1,136 @@
-# AI Kitchen Assistant
+# AI Kitchen Assistant 🍳
 
-Every time I open the fridge I wonder what to cook, and I want something quick that uses what I already have. This app lets you take a photo of your ingredients. A vision model reads the photo, the app finds real recipes that match, and it shows which ingredients you already have and which you still need to buy.
+Turn the ingredients you already have into dinner. Upload a photo of your fridge or describe what you feel like cooking, and the app creates a recipe, plans your meals, and reviews the dish you cooked. Real recipes written by real cooks are shown next to the AI's suggestions.
 
-> Status: work in progress. Built as a project for the Ironhack AI Engineering bootcamp.
+> **Idea in one line:** AI creates, real recipes validate.
+
+Built for the Ironhack AI Engineering bootcamp with **React (Vite)**, **FastAPI**, **scikit-learn**, **SQLite** and the **OpenAI API**.
+
+---
 
 ## Features
 
-**Done**
-- Photo upload endpoint (`POST /extract-ingredients`) that returns a structured ingredient list from a vision model
-- Upload validation: file type (JPEG, PNG, WebP) and size limit (5 MB)
-- Invalid-photo detection (not food, too blurry or dark) with a clear reason
-- Recipe database in SQLite: 8,761 cleaned recipes
-- Semantic search with OpenAI embeddings (cosine similarity), exposed as `POST /search-recipes`
-- "You have / assumed at home / buy" ingredient comparison for every result
-- Cuisine classifier (two algorithms compared), with a cuisine guess stored for every recipe
-- Calorie regression model (two algorithms compared, with an honest look at its limits)
-- Recipe clustering (KMeans) and 2D map coordinates (PCA + t-SNE)
+| Tab | What it does |
+|---|---|
+| **All recipes** | Browse 8,761 real recipes with photos. Search by name, filter by category and cooking time, open any recipe for the full ingredients and steps. |
+| **AI Recipe Generator** | Chat with the assistant. Upload a fridge photo (ingredients are read by a vision model and are editable) or just type an idea. The assistant asks short questions, then writes a recipe. Similar real recipes from the database are shown below it. |
+| **AI Meal Planner** | Say how many days (1–7) and which meals (breakfast, lunch, dinner). The assistant builds a plan shown as day cards, and you can ask it to change the plan. Printable. |
+| **AI Dish Reviewer** | Upload a photo of the dish you cooked. Get an overall score, five sub-scores, strengths, improvements and tips. |
 
-**Planned**
-- Route that serves the recipe map, with the user's ingredients highlighted
-- Conversational cooking agent with memory and tool calling
-- Pantry, saved recipes and weekly meal plan (SQLite)
-- Dish Reviewer mode (photo of the finished dish, structured feedback, history)
-- React (Vite) frontend
-- Deployment: backend on Render, frontend on Vercel
-
-## Tech stack
-
-- **Backend:** FastAPI, SQLite, scikit-learn, pandas, numpy
-- **AI:** OpenAI API (vision with structured outputs, embeddings)
-- **Frontend (planned):** React with Vite
-- **Deployment (planned):** Render and Vercel
+No sign-in is needed. The server stores nothing about users; the browser sends the chat history with each request.
 
 ## How it works
 
-1. The user uploads a photo of their fridge or groceries.
-2. The backend validates the file, then sends the image to a vision model. The model returns JSON: `is_valid_food_photo`, `reason` and `ingredients`.
-3. The user's ingredients are turned into a query text and embedded.
-4. The query embedding is compared with the embeddings of all recipes, and the closest ones are ranked.
-5. For each recipe, the app compares its ingredient list with the user's list and shows what the user has, what is assumed to be at home (salt, water, pepper), and what to buy.
+```
+React (Vite)  ──fetch──►  FastAPI  ──►  OpenAI (vision, structured output, embeddings)
+                              │
+                              └──►  SQLite (recipes + embeddings)  +  scikit-learn models
+```
 
-I chose to find real recipes with search instead of letting the model invent them. A recipe written by people is safer than one an AI makes up, for example when it comes to cooking times.
+1. **Photo → ingredients:** a vision model returns a structured result (`is_valid_food_photo`, `reason`, `ingredients`). Non-food photos are rejected.
+2. **Chat → recipe:** the model returns a structured turn (`reply` + optional `recipe`). It asks at most two short questions, then writes the recipe.
+3. **Similar real recipes:** the AI recipe's ingredients are turned into an embedding (`text-embedding-3-small`) and compared with the stored recipe embeddings using cosine similarity. The closest matches are shown, with what you have and what you'd need to buy.
+4. **Meal planner and dish reviewer:** each uses its own structured-output schema, so the page always receives clean fields.
 
-## Data
+## Data and machine learning
 
-**Recipe search, calories and the map: Food.com Recipes and Reviews (Kaggle)**
-- Read the first 10,000 rows, kept 8,761 after cleaning.
-- Cleaning rules:
-  - Calories must be between 20 and 2,000 (zero-calorie rows and extreme outliers look like bad data).
-  - Drop recipes with 1 serving and more than 1,000 calories. Their calories are most likely for the whole batch, not one portion.
-  - Drop duplicate recipe names and recipes with no ingredients.
-- Ingredients and instructions are stored as R-style text (`c("a", "b")`). They are parsed with a regular expression that also handles escaped quotes such as `1/8\" thickness`.
-- Ingredients and instructions are saved in SQLite as JSON text.
-- Embeddings are stored as float32 blobs in a separate table, together with the name of the model that made them.
+- **Data:** the Food.com recipes dataset (from Kaggle), cleaned and loaded into SQLite: 8,761 recipes after removing duplicates, batch-style entries and implausible calorie values.
+- **Embeddings:** one 1,536-number vector per recipe, stored as a float32 BLOB and loaded into memory once at start-up. Search is a single matrix multiplication.
+- **Cuisine classifier:** TF-IDF + Linear SVC on ingredients. Accuracy about 0.78, macro F1 about 0.70.
+- **Calorie model:** [fill in: model, MAE and R², and the baseline you compared with]. It did not clearly beat the baseline, so the app shows the dataset's own calorie values rather than predictions.
+- **Clustering and map:** KMeans + PCA / t-SNE over the recipe vectors. The map data is saved in `backend/models/recipe_map.json`.
 
-**Cuisine classifier: Kaggle Recipe Ingredients Dataset**
-- 39,774 recipes, 20 cuisines, with an ingredient list for each.
-- The classes are unbalanced: Italian has 7,838 recipes and Brazilian 467.
-- `test.json` has no cuisine labels, so a stratified 80/20 validation split is taken from `train.json`.
+## Safety and honesty
 
-## Model metrics
+- AI recipes, plans and reviews are always labelled as AI-generated and "not tested by cooks".
+- Prompts include safe cooking temperatures and a food-safety note.
+- Text from users, photos and recipes is treated as **data, not instructions** (prompt-injection defence).
+- Inputs are validated: image type and size (max 5 MB), list lengths, message lengths.
+- The dish reviewer judges appearance only. It does not claim a dish is cooked through or safe to eat.
+- The OpenAI key lives only in `backend/.env`, which is git-ignored.
 
-### Cuisine classifier
+## API routes
 
-Ingredients are joined into one string per recipe and converted with TF-IDF (2,331 words, words in fewer than 2 recipes ignored). The vocabulary is learned on the training split only, so the validation split does not leak into it. Scores are on 7,955 validation recipes.
-
-| Model | Accuracy | Macro F1 |
+| Method | Route | Purpose |
 |---|---|---|
-| Baseline (always "italian") | 0.197 | 0.016 |
-| Logistic Regression | 0.777 | 0.695 |
-| **Linear SVC (chosen)** | **0.783** | **0.701** |
+| GET | `/health` | Health check |
+| POST | `/extract-ingredients` | Fridge photo → ingredient list |
+| POST | `/search-recipes` | Ingredients → closest real recipes |
+| GET | `/recipes` | Browse recipes (search, category, time, photo filter, paging) |
+| GET | `/recipes/{id}` | One recipe with ingredients and steps |
+| GET | `/categories` | Category list for the filter |
+| POST | `/chat` | AI Recipe Generator turn: reply, recipe, similar recipes |
+| POST | `/meal-plan` | AI Meal Planner turn: reply and plan |
+| POST | `/review-dish` | AI Dish Reviewer: photo → scores and feedback |
 
-- The gap between the two real models is small (about 48 recipes out of 7,955) and comes from one split, so it is not strong evidence that Linear SVC is better.
-- Best cuisines: Mexican (F1 0.91), Indian (0.88), Italian (0.85). Weakest: British (0.49), Russian (0.50), Irish (0.52), Vietnamese (0.56), Spanish (0.57).
-- Most common confusions are between neighbouring cuisines that share ingredients: French predicted as Italian (105 times), Italian as French (66), Vietnamese as Thai (45), Greek as Italian (44), Cajun/Creole as Southern US (40). The full confusion matrix is saved as `models/confusion_matrix.csv`.
-
-**Experiment: class weights.** With `class_weight="balanced"`, recall improved for rare cuisines (Russian 0.42 to 0.60, Irish 0.44 to 0.56) but precision fell more, so the scores dropped. I kept the unbalanced models.
-
-| Model, balanced | Accuracy | Macro F1 |
-|---|---|---|
-| Logistic Regression | 0.742 | 0.674 |
-| Linear SVC | 0.763 | 0.682 |
-
-### Calorie predictor
-
-Same TF-IDF idea on the ingredient names, predicting calories (the recipe's own value in the dataset). Scores on a 20% random validation split.
-
-| Calorie cap | Model | MAE (kcal) | R² |
-|---|---|---|---|
-| 2,000 | Baseline (median) | 230.5 | -0.060 |
-| 2,000 | Ridge | 233.3 | 0.019 |
-| 2,000 | Random Forest | 231.6 | 0.011 |
-| 1,000 | Baseline (median) | 172.2 | -0.037 |
-| 1,000 | Ridge | 161.5 | 0.110 |
-| 1,000 | Random Forest | 160.6 | 0.109 |
-
-**Honest discussion of its limits**
-- With the 2,000 cap, neither model beat a baseline that always guesses the median. The largest errors were muffins, fudge and fruitcake near 1,900 to 2,000 kcal that the model put at 200 to 380. These look like whole-batch totals, but I did not check their serving counts.
-- Tightening the cap to 1,000 kcal helped: both models beat the baseline, by about 11 kcal of MAE (roughly 7%), with R² around 0.11. That is still weak: the model explains about a tenth of the variation.
-- Ingredient names carry no amounts, so "butter, sugar, flour" fits both a small cookie and a large batch.
-- The app therefore shows each recipe's own dataset calories and does not show model predictions.
-
-### Clustering and recipe map
-
-- KMeans on the recipe embeddings, with k tried at 6, 8, 10, 12 and 15. Silhouette scores were all low (0.031 to 0.036), so the clusters overlap and k is a judgement call. I used k = 15.
-- Read by eye, the clusters form sensible themes: salads, Asian noodles and rice, chicken, baked sweets, drinks and frozen desserts, Indian dishes, pies, cookies and candy, soups, potatoes, Mexican and salsa, tomato and pasta dishes, beef and stews. One cluster (tuna, scones, dips) is a mixed leftover group.
-- 2D coordinates come from PCA (to 50 dimensions) followed by t-SNE, scaled to 0 to 1 and saved to `models/recipe_map.json`.
-
-## Safety
-
-- Uploaded files are checked for type and size before any API call is made.
-- The vision prompt tells the model to set `is_valid_food_photo` to false for non-food or unreadable images, and to treat any text inside an image as data, never as instructions.
-- Search requests are validated: 1 to 30 ingredients, and a blank ingredient list returns a clear error.
-
-## Known limitations
-
-- Some calorie values look like whole-batch totals even after cleaning, so any calorie model trained on them is noisy.
-- Some recipes have incomplete ingredient lists (for example, Hainanese Chicken Rice has no rice in the stored list).
-- Ingredient fragments such as `rind of` and `zest of` appear in some recipes.
-- Ingredient matching uses whole words, so `rice` also matches `rice vinegar`. The list of home staples is a guess.
-- Similarity scores only rank results against each other. A good match and a loose match can have almost the same score, so a fixed score cutoff would be wrong.
-- The `category` column mixes dish types with other labels such as `< 15 Mins`.
-- The cuisine classifier knows only 20 mostly savoury cuisines and was trained on Kaggle's ingredient wording, but it is applied to Food.com recipes. Desserts and drinks get a wrong label (a frozen berry dessert was tagged French, a lemonade Italian), and 25% of recipes were tagged Southern US. The tag is only a guess, and its accuracy on Food.com recipes could not be measured.
-- Only the first 10,000 rows of the Food.com file were used. Category counts looked balanced (the largest, Dessert, is 11.3%), but this was only checked for the top 10 categories.
+Interactive docs: `http://127.0.0.1:8000/docs`
 
 ## Project structure
 
 ```
 kitchen-assistant/
-  backend/
-    main.py            FastAPI app
-    recipe_search.py   embedding search, loaded once at startup
-    scripts/           data exploration, loading, embedding, training and map scripts
-    data/              datasets (not in Git)
-    db/                SQLite database (not in Git)
-    models/            trained models and map data (not in Git)
-    .env               API key (not in Git)
-  frontend/            React app (planned)
+├── backend/
+│   ├── main.py            # FastAPI app and routes
+│   ├── chat_agent.py      # AI Recipe Generator
+│   ├── meal_planner.py    # AI Meal Planner
+│   ├── recipe_search.py   # embedding search, browse, recipe lookup
+│   ├── scripts/           # data cleaning, DB build, embeddings, model training
+│   ├── requirements.txt
+│   └── .env               # OPENAI_API_KEY (not committed)
+├── frontend/
+│   ├── public/food/       # landing-page photos
+│   └── src/
+│       ├── App.jsx, App.css
+│       ├── api.js, RecipeModal.jsx
+│       └── pages/         # Landing, Recipes, Chat, Planner, Reviewer
+└── README.md
 ```
+
+`backend/data`, `backend/db` and `backend/models` are generated locally and are not committed.
 
 ## Setup (Windows, PowerShell)
 
-1. Create and activate a virtual environment:
-   ```powershell
-   cd backend
-   python -m venv .venv
-   .venv\Scripts\Activate.ps1
-   ```
-2. Install the packages (a `requirements.txt` is still to be added):
-   ```powershell
-   pip install fastapi uvicorn python-multipart openai python-dotenv pydantic pandas scikit-learn numpy joblib
-   ```
-3. Create `backend\.env` with your own key. Never commit this file.
-   ```
-   OPENAI_API_KEY=your-key-here
-   ```
-4. Download the datasets from Kaggle into `backend\data\` (the Food.com `recipes.csv`, and `train.json` and `test.json` from the recipe ingredients dataset).
-5. Build the database. Run these from `backend`:
-   ```powershell
-   python scripts\create_db.py
-   python scripts\load_recipes.py
-   python scripts\create_embeddings_table.py
-   python scripts\embed_recipes.py
-   ```
-   Embedding all recipes calls the OpenAI API and costs a small amount. Check the pricing page first.
-6. Train the models and build the map:
-   ```powershell
-   python scripts\train_cuisine.py
-   python scripts\train_calories.py
-   python scripts\build_map.py
-   python scripts\add_tags.py
-   ```
-7. Try the search:
-   ```powershell
-   python scripts\search_recipes.py
-   ```
-8. Start the server:
-   ```powershell
-   uvicorn main:app --reload
-   ```
-   Then open `http://127.0.0.1:8000/docs`.
+**Backend**
 
-## Routes
+```powershell
+cd backend
+python -m venv .venv
+.venv\Scripts\Activate.ps1
+pip install -r requirements.txt
+```
 
-| Method | Path | Purpose |
-|---|---|---|
-| GET | `/` | Welcome message |
-| GET | `/health` | Health check |
-| POST | `/extract-ingredients` | Upload a photo, get an ingredient list |
-| POST | `/search-recipes` | Send ingredients, get the closest recipes with have/buy lists |
+Create `backend\.env` with one line (never commit this file):
+
+```
+OPENAI_API_KEY=your-key-here
+```
+
+Build the database and models by running the scripts in `backend\scripts` (from `backend`, as `python scripts\name.py`): create the database, load the recipes, create and fill the embeddings, add times, images and cuisine tags, and train the models. Then start the API:
+
+```powershell
+fastapi dev main.py
+```
+
+**Frontend** (in a second terminal)
+
+```powershell
+cd frontend
+npm install
+npm run dev
+```
+
+Open `http://localhost:5173`.
+
+## Known limitations
+
+- Only about 31% of recipes have a photo (the dataset has none for the rest), so the grid can hide recipes without photos.
+- The AI recipe has no photo of its own; the photo shown comes from the closest real recipe.
+- The calorie model is weak and is not used in the app.
+- Ingredient matching works on whole words and does not fix spelling mistakes.
+- The model name is set in `main.py`, `chat_agent.py` and `meal_planner.py`.
+- No user accounts, so nothing is saved between visits.
+
+## Credits
+
+- Recipes: Food.com dataset on Kaggle (educational use).
+- Landing-page photos: [add the sources and photographers here].
