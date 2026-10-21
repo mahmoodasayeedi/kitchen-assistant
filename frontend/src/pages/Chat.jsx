@@ -2,6 +2,9 @@ import { useEffect, useRef, useState } from "react";
 import { API, errorText, formatTime } from "../api";
 import RecipeModal from "../RecipeModal";
 
+const SpeechRecognition =
+  typeof window !== "undefined" ? window.SpeechRecognition || window.webkitSpeechRecognition : null;
+
 const SUGGESTIONS = [
   "I'm making pasta with cream sauce for a dinner party. Give me a recipe and some tips.",
   "Do you have any ideas for a healthy breakfast that doesn't require cooking?",
@@ -66,6 +69,12 @@ export default function Chat() {
   const [error, setError] = useState("");
   const [openId, setOpenId] = useState(null);
   const chatBox = useRef(null);
+
+const [listening, setListening] = useState(false);
+const [voiceNote, setVoiceNote] = useState("");
+const recogRef = useRef(null);
+
+useEffect(() => () => recogRef.current?.abort(), []);
 
   useEffect(() => {
     if (chatBox.current) chatBox.current.scrollTop = chatBox.current.scrollHeight;
@@ -158,6 +167,43 @@ export default function Chat() {
     setIngredients(ingredients.filter((_, i) => i !== index));
   }
 
+  function toggleVoice() {
+  if (!SpeechRecognition) {
+    setVoiceNote("Voice input works in Chrome or Edge. You can still type.");
+    return;
+  }
+  if (listening) {
+    recogRef.current?.stop();
+    return;
+  }
+  setVoiceNote("");
+  const rec = new SpeechRecognition();
+  rec.lang = "en-US";
+  rec.continuous = false;
+  rec.interimResults = false;
+  rec.onresult = (e) => {
+    const text = e.results[0][0].transcript.trim();
+    if (text) setDraft((d) => (d ? d + " " : "") + text);
+  };
+  rec.onerror = (e) => {
+    if (e.error === "not-allowed" || e.error === "service-not-allowed") {
+      setVoiceNote("Microphone is blocked. Allow it in the browser, or type instead.");
+    } else if (e.error === "no-speech") {
+      setVoiceNote("I didn't hear anything. Try again.");
+    } else if (e.error !== "aborted") {
+      setVoiceNote("Voice input failed. You can still type.");
+    }
+  };
+  rec.onend = () => setListening(false);
+  recogRef.current = rec;
+  try {
+    rec.start();
+    setListening(true);
+  } catch {
+    setVoiceNote("Voice input could not start. Please try again.");
+  }
+}
+
   const latest = [...messages].reverse().find((m) => m.role === "assistant" && m.recipe);
   const heroImg = latest && (latest.similar || []).find((r) => r.image_url)?.image_url;
 
@@ -233,11 +279,21 @@ export default function Chat() {
             📎
             <input type="file" hidden accept="image/jpeg,image/png,image/webp" onChange={uploadPhoto} />
           </label>
+          <button
+  type="button"
+  className={`mic ${listening ? "listening" : ""}`}
+  onClick={toggleVoice}
+  title={listening ? "Stop listening" : "Speak your request"}
+  aria-label={listening ? "Stop listening" : "Speak your request"}
+>
+  🎤
+</button>
+
           <input
             value={draft}
             onChange={(e) => setDraft(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && submit(draft)}
-            placeholder="Ask me for a recipe, a meal idea, or cooking tips..."
+            placeholder={listening ? "Listening..." : "Ask me for a recipe, a meal idea, or cooking tips..."}
           />
           <button className="primary" onClick={() => submit(draft)} disabled={loading}>Send</button>
         </div>
