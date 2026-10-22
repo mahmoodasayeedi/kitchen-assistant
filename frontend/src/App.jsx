@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { CalendarDays, Camera, ChefHat, Sparkles, UtensilsCrossed,Video } from "lucide-react";
 import "./App.css";
 import Landing from "./pages/Landing";
@@ -26,13 +26,7 @@ const GROUPS = [
 
 export default function App() {
   const [view, setView] = useState("landing");
-  const [userName, setUserName] = useState(() => {
-  try { return localStorage.getItem("userName") || ""; } catch { return ""; }
-});
-
-useEffect(() => {
-  try { localStorage.setItem("userName", userName); } catch { /* storage unavailable */ }
-}, [userName]);
+  const [userName, setUserName] = useState("");
 
   return (
     <>
