@@ -1,11 +1,12 @@
 import { useState } from "react";
-import { CalendarDays, Camera, ChefHat, Sparkles, UtensilsCrossed } from "lucide-react";
+import { CalendarDays, Camera, ChefHat, Sparkles, UtensilsCrossed,Video } from "lucide-react";
 import "./App.css";
 import Landing from "./pages/Landing";
 import Recipes from "./pages/Recipes";
 import Chat from "./pages/Chat";
 import Planner from "./pages/Planner";
 import Reviewer from "./pages/Reviewer";
+import Channel from "./pages/Channel";
 
 const GROUPS = [
   {
@@ -20,6 +21,7 @@ const GROUPS = [
       { id: "reviewer", Icon: Camera, label: "AI Dish Reviewer" },
     ],
   },
+    { title: "My Kitchen", tabs: [{ id: "channel", Icon: Video, label: "My Recipes" }] },
 ];
 
 export default function App() {
@@ -73,6 +75,8 @@ export default function App() {
             <div hidden={view !== "chat"}><Chat /></div>
             <div hidden={view !== "planner"}><Planner /></div>
             <div hidden={view !== "reviewer"}><Reviewer /></div>
+            <div hidden={view === "channel" }><Channel/></div>
+
           </main>
         </div>
       </div>
