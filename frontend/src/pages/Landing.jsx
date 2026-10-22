@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import CreatorAvatar from "../CreatorAvatar";
 
 const IMAGES = [
   { src: "/food/dish1.jpg", alt: "Cooked dish 1" },
@@ -101,17 +102,20 @@ function ConcaveWall() {
   );
 }
 
-export default function Landing({ onStart }) {
+export default function Landing({ onStart, name, setName }) {
   return (
     <div className="landing">
       <header className="landing-head">
-        <h1 aria-label="From Fridge to Fabulous!">
-          {["From", "Fridge", "to", "Fabulous!"].map((word, i) => (
-            <span key={word} className="word" style={{ animationDelay: `${i * 0.18}s` }} aria-hidden="true">
-              {word}
-            </span>
-          ))}
-        </h1>
+        <div className="hero-row">
+          <CreatorAvatar />
+          <h1 aria-label="From Fridge to Fabulous!">
+            {["From", "Fridge", "to", "Fabulous!"].map((word, i) => (
+              <span key={word} className="word" style={{ animationDelay: `${i * 0.18}s` }} aria-hidden="true">
+                {word}
+              </span>
+            ))}
+          </h1>
+        </div>
         <p className="tagline">Your ingredients. Your preferences. Your next delicious meal.</p>
         <p className="about">
           Upload a photo of your fridge, discover personalised recipes, and cook something amazing
@@ -121,7 +125,17 @@ export default function Landing({ onStart }) {
 
       <ConcaveWall />
 
-      <button className="primary start" onClick={onStart}>Let's Get Cooking! →</button>
+      <form className="start-row" onSubmit={(e) => { e.preventDefault(); onStart(); }}>
+  <input
+    className="name-input"
+    value={name}
+    onChange={(e) => setName(e.target.value)}
+    maxLength={30}
+    placeholder="What should I call you?"
+    aria-label="Your name"
+  />
+  <button type="submit" className="primary start">Let's Get Cooking! →</button>
+</form>
       <p className="credits">Free to explore · No sign-up required</p>
     </div>
   );

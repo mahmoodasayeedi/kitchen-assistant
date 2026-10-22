@@ -1,4 +1,4 @@
-export const CHANNEL_NAME = "My Kitchen Channel";
+export const CHANNEL_NAME = "Nahida's Zaika";
 export const CHANNEL_URL = "https://www.youtube.com/@mahmoodasayeedi3040";
 
 export const VIDEOS = [

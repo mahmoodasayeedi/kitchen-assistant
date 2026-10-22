@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { CalendarDays, Camera, ChefHat, Sparkles, UtensilsCrossed,Video } from "lucide-react";
 import "./App.css";
 import Landing from "./pages/Landing";
@@ -26,10 +26,17 @@ const GROUPS = [
 
 export default function App() {
   const [view, setView] = useState("landing");
+  const [userName, setUserName] = useState(() => {
+  try { return localStorage.getItem("userName") || ""; } catch { return ""; }
+});
+
+useEffect(() => {
+  try { localStorage.setItem("userName", userName); } catch { /* storage unavailable */ }
+}, [userName]);
 
   return (
     <>
-      {view === "landing" && <Landing onStart={() => setView("chat")} />}
+      {view === "landing" && <Landing onStart={() => setView("chat")} name={userName} setName={setUserName} />}
 
       <div hidden={view === "landing"}>
         <div className="layout">
@@ -64,13 +71,20 @@ export default function App() {
                 <span className="live-dot" />
               </span>
               <div>
-                <div className="guest-title">Guest Mode</div>
+                <div className={`guest-title ${userName.trim() ? "name-script" : ""}`}>
+  {userName.trim() ? `Hi, ${userName.trim()}` : "Guest Mode"}
+</div>
                 <div className="guest-sub">No sign-in needed</div>
               </div>
             </div>
           </aside>
 
         <main className="main">
+          {userName.trim() && (
+  <div className="greeting">
+    Welcome, <span className="name-script">{userName.trim()}</span> ✨
+  </div>
+)}
   <div hidden={view !== "recipes"}><Recipes /></div>
   <div hidden={view !== "chat"}><Chat /></div>
   <div hidden={view !== "planner"}><Planner /></div>

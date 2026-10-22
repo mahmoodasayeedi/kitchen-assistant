@@ -795,3 +795,185 @@ aside.sidebar .side-item.brand:hover { background: transparent; }
     background-position: -200% 0;
   }
 }
+
+.creator-wrap {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 14px;
+}
+
+.creator {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  padding: 6px 20px 6px 6px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.75);
+  border: 1px solid rgba(232, 163, 61, 0.55);
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.08);
+  text-decoration: none;
+  color: inherit;
+  backdrop-filter: blur(6px);
+  transition: transform 0.2s;
+}
+
+.creator:hover {
+  transform: translateY(-2px);
+}
+
+.creator-pic {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid var(--gold);
+}
+
+.creator-text {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.15;
+  text-align: left;
+}
+
+.creator-by {
+  font-size: 0.7rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #6b6b6b;
+}
+
+.creator-name {
+  font-family: "Dancing Script", cursive;
+  font-size: 1.6rem;
+  font-weight: 700;
+  color: var(--brand);
+}
+
+.creator-sub {
+  font-size: 0.75rem;
+  color: var(--brand);
+}
+.hero-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 28px;
+  flex-wrap: wrap;
+}
+
+.hero-avatar {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  text-decoration: none;
+  transition: transform 0.2s;
+}
+
+.hero-avatar:hover {
+  transform: translateY(-3px) rotate(-2deg);
+}
+
+.hero-avatar img {
+  width: 150px;
+  height: 150px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 4px solid var(--gold);
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.18);
+}
+
+.hero-avatar-name {
+  font-family: "Dancing Script", cursive;
+  font-size: 1.7rem;
+  font-weight: 700;
+  color: var(--brand);
+}
+
+@media (max-width: 700px) {
+  .hero-avatar img {
+    width: 110px;
+    height: 110px;
+  }
+}
+.hero-row {
+  flex-wrap: nowrap;
+  gap: 28px;
+}
+
+.hero-row h1 {
+  margin: 0;
+}
+
+.hero-avatar img {
+  width: clamp(120px, 15vw, 230px);
+  height: clamp(120px, 15vw, 230px);
+}
+
+@media (max-width: 700px) {
+  .hero-row {
+    flex-wrap: wrap;
+  }
+
+  .hero-avatar img {
+    width: 110px;
+    height: 110px;
+  }
+}
+.start-row {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.name-input {
+  padding: 12px 16px;
+  border-radius: 12px;
+  border: 1px solid rgba(47, 82, 56, 0.3);
+  background: #fff;
+  font-size: 1rem;
+  font-family: inherit;
+  min-width: 230px;
+}
+
+.name-input:focus {
+  outline: 2px solid var(--gold);
+}
+
+.name-script {
+  font-family: "Dancing Script", cursive;
+  font-weight: 700;
+}
+
+.guest-title.name-script {
+  font-size: 1.3rem;
+}
+.greeting {
+  position: fixed;
+  top: 12px;
+  right: 24px;
+  z-index: 20;
+  padding: 4px 16px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.8);
+  border: 1px solid rgba(232, 163, 61, 0.55);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.08);
+  color: var(--brand);
+  font-size: 0.9rem;
+  pointer-events: none;
+}
+
+.greeting .name-script {
+  font-size: 1.6rem;
+  vertical-align: middle;
+}
+
+@media (max-width: 760px) {
+  .greeting {
+    top: 8px;
+    right: 10px;
+  }
+}
