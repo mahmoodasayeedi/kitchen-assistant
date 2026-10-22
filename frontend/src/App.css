@@ -977,3 +977,20 @@ aside.sidebar .side-item.brand:hover { background: transparent; }
     right: 10px;
   }
 }
+.shop-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: 6px;
+}
+
+.shop-head h4 {
+  margin: 0;
+}
+
+.shop-head .actions {
+  display: flex;
+  gap: 8px;
+}

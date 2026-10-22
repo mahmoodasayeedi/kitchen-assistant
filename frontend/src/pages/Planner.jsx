@@ -32,6 +32,7 @@ function PlanView({ plan }) {
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState("");
   const [ticked, setTicked] = useState({});
+  const [copied, setCopied] = useState(false);
 
   useEffect(() => {
     setList(null);
@@ -70,7 +71,38 @@ function PlanView({ plan }) {
   function toggle(key) {
     setTicked((t) => ({ ...t, [key]: !t[key] }));
   }
+function listText() {
+  const lines = [`Shopping list: ${plan.title}`, ""];
+  list.aisles.forEach((a) => {
+    lines.push(a.name.toUpperCase());
+    a.items.forEach((it, i) => {
+      const mark = ticked[`${a.name}-${i}`] ? "[x]" : "[ ]";
+      lines.push(`${mark} ${it.name} - ${it.quantity}`);
+    });
+    lines.push("");
+  });
+  return lines.join("\n");
+}
 
+function downloadList() {
+  const blob = new Blob([listText()], { type: "text/plain;charset=utf-8" });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = "shopping-list.txt";
+  link.click();
+  URL.revokeObjectURL(url);
+}
+
+async function copyList() {
+  try {
+    await navigator.clipboard.writeText(listText());
+    setCopied(true);
+    setTimeout(() => setCopied(false), 1500);
+  } catch {
+    /* clipboard blocked: ignore */
+  }
+}
   return (
     <div className="plan">
       <div className="plan-head">
@@ -101,7 +133,14 @@ function PlanView({ plan }) {
       {err && <div className="error">{err}</div>}
       {list && (
         <div className="shoplist">
-          <h4>🛒 Shopping list</h4>
+          <div className="shop-head">
+  <h4>🛒 Shopping list</h4>
+  <div className="actions">
+    <button className="primary" onClick={downloadList}>⬇ Download</button>
+    <button className="primary" onClick={copyList}>{copied ? "Copied ✓" : "Copy"}</button>
+  </div>
+</div>
+
           {list.aisles.map((a) => (
             <div className="aisle" key={a.name}>
               <div className="aislename">{a.name}</div>
