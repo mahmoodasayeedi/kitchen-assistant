@@ -23,15 +23,17 @@ The first request after a quiet period can take a few seconds while the server w
 | ----------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | **All recipes**         | Browse 8,761 real recipes with photos. Search by name, filter by category and cooking time, open any recipe for the full ingredients and steps.                                                                                                     |
 | **AI Recipe Generator** | Chat with the assistant. Upload a fridge photo (ingredients are read by a vision model and are editable), type an idea, or **speak it with the 🎤 button**. The assistant asks short questions, then writes a recipe. Similar real recipes from the database are shown below it. Each recipe also gets an **AI-generated picture** of the dish (about 10 seconds, labelled as AI-generated). |
-| **AI Meal Planner**     | Type or speak (🎤) how many days (1–7) and which meals (breakfast, lunch, dinner). The assistant builds a plan shown as day cards, and you can ask it to change the plan. Printable. **Shopping list:** one click merges the plan's ingredients, adds up duplicates, groups them by aisle (Produce, Dairy, Pantry...) and gives a checklist you can tick off. |
+| **AI Meal Planner**     | Type or speak (🎤) how many days (1–7) and which meals (breakfast, lunch, dinner). The assistant builds a plan shown as day cards, and you can ask it to change the plan. Printable. **Shopping list:** one click merges the plan's ingredients, adds up duplicates, groups them by aisle (Produce, Dairy, Pantry...) and gives a checklist you can tick off. The list can be downloaded as a text file or copied to the clipboard. |
 | **AI Dish Reviewer**    | Upload a photo of the dish you cooked. Get an overall score, five sub-scores, strengths, improvements and tips.                                                                                                                                     |
 
-Two more things sit outside the four AI/recipe tabs:
+Three more things sit outside the four AI/recipe tabs:
+
+- **Installable app (PWA):** in Chrome or Edge, the **Install** button in the address bar adds the app to your computer or phone with its own icon and window. On an iPhone use Safari's **Share, Add to Home Screen**. It is a web app, so it still needs an internet connection.
 
 - **My Recipes** (sidebar, "My Kitchen" group): the author's own recipe videos from YouTube. Each card shows the video thumbnail and plays the video inside the app, with a link to open it on YouTube and a link to the channel. The list is a small data file (`frontend/src/videos.js`), so adding a video is one new line.
 - **Landing page:** the author's channel avatar and name (Nahida's Zaika) sit beside the "From Fridge to Fabulous!" heading and link to the channel. Visitors can type **what to call them**; the name is shown as a greeting on every page and in the sidebar, in a handwriting font.
 
-No sign-in is needed. The server stores nothing about users; the browser sends the chat history with each request. The visitor's name is saved only in the browser (localStorage) and is never sent to the server. The assistant answers in any language if you ask for one (for example "give me this recipe in Spanish"); the interface itself is in English.
+No sign-in is needed. The server stores nothing about users; the browser sends the chat history with each request. The visitor's name is kept in memory only while the app is open: it is never saved and never sent to the server. The assistant answers in any language if you ask for one (for example "give me this recipe in Spanish"); the interface itself is in English.
 
 ## How it works
 
@@ -104,7 +106,7 @@ kitchen-assistant/
 │   ├── vercel.json           # function settings for Vercel
 │   └── .env                  # OPENAI_API_KEY, local only (not committed)
 ├── frontend/
-│   ├── public/               # food/ landing-page photos, channel.png (channel avatar)
+│   ├── public/               # food/ landing-page photos, channel.png (avatar), manifest.json and app icons (PWA)
 │   └── src/
 │       ├── App.jsx, App.css
 │       ├── api.js, useVoice.js, videos.js, RecipeModal.jsx, CreatorAvatar.jsx
@@ -170,6 +172,7 @@ The app runs as two Vercel projects connected to the same GitHub repository:
 - Ingredient matching works on whole words and does not fix spelling mistakes.
 - The model names are set in `main.py`, `chat_agent.py`, `meal_planner.py` and `shopping.py` (text and vision), and in `recipe_image.py` (image model).
 - Shopping-list amounts are estimates, because meal plans do not include quantities.
+- The installed app needs an internet connection (the recipes and the AI run on the server), and voice input may not work on iPhone.
 - Voice input works in Chrome and Edge (not Firefox), needs microphone permission, and is set to English. The browser's speech service does the recognition, so it needs an internet connection.
 - No user accounts, so nothing is saved between visits.
 
