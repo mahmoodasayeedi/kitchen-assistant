@@ -761,3 +761,37 @@ aside.sidebar .side-item.brand:hover { background: transparent; }
 .vtitle {
   font-size: 1.05rem;
 }
+.picbox {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 18px;
+  margin-bottom: 12px;
+  border: 1px dashed rgba(47, 82, 56, 0.35);
+  border-radius: 14px;
+  background: var(--linen-card);
+}
+.picskeleton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 220px;
+  margin-bottom: 12px;
+  border-radius: 14px;
+  color: var(--brand);
+  font-weight: 600;
+  background: linear-gradient(110deg, #f3ede1 30%, #fbf7ee 50%, #f3ede1 70%);
+  background-size: 200% 100%;
+  animation: picwave 1.4s linear infinite;
+}
+
+@keyframes picwave {
+  from {
+    background-position: 200% 0;
+  }
+
+  to {
+    background-position: -200% 0;
+  }
+}

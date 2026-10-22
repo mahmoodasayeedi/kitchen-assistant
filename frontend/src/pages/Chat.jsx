@@ -73,6 +73,9 @@ export default function Chat() {
 const [listening, setListening] = useState(false);
 const [voiceNote, setVoiceNote] = useState("");
 const recogRef = useRef(null);
+const [pictures, setPictures] = useState({});
+const [picLoading, setPicLoading] = useState(false);
+const [picError, setPicError] = useState("");
 
 useEffect(() => () => recogRef.current?.abort(), []);
 
@@ -81,30 +84,31 @@ useEffect(() => () => recogRef.current?.abort(), []);
   }, [messages, loading]);
 
   async function send(history, ings) {
-    setError("");
-    setMessages(history);
-    setLoading(true);
-    try {
-      const res = await fetch(`${API}/chat`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ messages: historyFor(history), ingredients: ings }),
-      });
-      const data = await res.json().catch(() => null);
-      if (!res.ok) {
-        setError(errorText(data, "The assistant could not answer. Please try again."));
-        return;
-      }
-      setMessages([
-        ...history,
-        { role: "assistant", content: data.reply, recipe: data.recipe, similar: data.similar || [] },
-      ]);
-    } catch {
-      setError("Cannot reach the server. Is the backend running?");
-    } finally {
-      setLoading(false);
+  setError("");
+  setMessages(history);
+  setLoading(true);
+  try {
+    const res = await fetch(`${API}/chat`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ messages: historyFor(history), ingredients: ings }),
+    });
+    const data = await res.json().catch(() => null);
+    if (!res.ok) {
+      setError(errorText(data, "The assistant could not answer. Please try again."));
+      return;
     }
+    setMessages([
+      ...history,
+      { role: "assistant", content: data.reply, recipe: data.recipe, similar: data.similar || [] },
+    ]);
+    if (data.recipe) makePicture(data.recipe);      // ⬅️ NEW LINE
+  } catch {
+    setError("Cannot reach the server. Is the backend running?");
+  } finally {
+    setLoading(false);
   }
+}
 
   function submit(text) {
     const clean = text.trim();
@@ -166,6 +170,31 @@ useEffect(() => () => recogRef.current?.abort(), []);
   function removeItem(index) {
     setIngredients(ingredients.filter((_, i) => i !== index));
   }
+  async function makePicture(recipe) {
+  if (picLoading || pictures[recipe.title]) return;
+  setPicError("");
+  setPicLoading(true);
+  try {
+    const res = await fetch(`${API}/recipe-image`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        title: recipe.title.slice(0, 100),
+        ingredients: recipe.ingredients.map((i) => i.name).slice(0, 12),
+      }),
+    });
+    const data = await res.json().catch(() => null);
+    if (!res.ok) {
+      setPicError(errorText(data, "Could not create the picture. Please try again."));
+      return;
+    }
+    setPictures((p) => ({ ...p, [recipe.title]: data.image }));
+  } catch {
+    setPicError("Cannot reach the server. Is the backend running?");
+  } finally {
+    setPicLoading(false);
+  }
+}
 
   function toggleVoice() {
   if (!SpeechRecognition) {
@@ -205,7 +234,7 @@ useEffect(() => () => recogRef.current?.abort(), []);
 }
 
   const latest = [...messages].reverse().find((m) => m.role === "assistant" && m.recipe);
-  const heroImg = latest && (latest.similar || []).find((r) => r.image_url)?.image_url;
+  
 
   const showFridge = preview || ingredients.length > 0 || photoNote || loadingPhoto;
 
@@ -308,11 +337,21 @@ useEffect(() => () => recogRef.current?.abort(), []);
           </div>
         ) : (
           <>
-            {heroImg && (
-              <>
-                <img className="panel-photo" src={heroImg} alt="A similar dish" referrerPolicy="no-referrer" />
-              </>
-            )}
+           {pictures[latest.recipe.title] ? (
+  <>
+    <img className="panel-photo" src={pictures[latest.recipe.title]} alt={latest.recipe.title} />
+    <p className="small">AI-generated image of the dish, not a photo of a real one.</p>
+  </>
+) : picLoading ? (
+  <div className="picskeleton">Plating your dish... 🍽️</div>
+) : (
+  <div className="picbox">
+    <button className="primary" onClick={() => makePicture(latest.recipe)}>
+      🎨 Generate picture
+    </button>
+    {picError && <div className="error">{picError}</div>}
+  </div>
+)}
             <RecipeCard recipe={latest.recipe} />
             {latest.similar && latest.similar.length > 0 && (
               <div className="panel-similar">

@@ -12,6 +12,7 @@ from fastapi import Query
 import meal_planner
 import os
 import shopping
+import recipe_image
 
 load_dotenv()
 client = OpenAI()
@@ -301,3 +302,16 @@ def make_shopping_list(request: ShoppingRequest):
             status_code=502,
             detail="Could not build the shopping list. Please try again.",
         )
+    
+
+class RecipeImageRequest(BaseModel):
+    title: str = Field(min_length=1, max_length=100)
+    ingredients: list[str] = Field(default_factory=list, max_length=12)
+
+
+@app.post("/recipe-image")
+def make_recipe_image(request: RecipeImageRequest):
+    try:
+        return {"image": recipe_image.illustrate(request.title, request.ingredients)}
+    except Exception:
+        raise HTTPException(status_code=502, detail="Could not create the picture. Please try again.")
