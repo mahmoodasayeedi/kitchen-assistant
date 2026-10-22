@@ -70,14 +70,13 @@ export default function App() {
             </div>
           </aside>
 
-          <main className="main">
-            <div hidden={view !== "recipes"}><Recipes /></div>
-            <div hidden={view !== "chat"}><Chat /></div>
-            <div hidden={view !== "planner"}><Planner /></div>
-            <div hidden={view !== "reviewer"}><Reviewer /></div>
-            <div hidden={view === "channel" }><Channel/></div>
-
-          </main>
+        <main className="main">
+  <div hidden={view !== "recipes"}><Recipes /></div>
+  <div hidden={view !== "chat"}><Chat /></div>
+  <div hidden={view !== "planner"}><Planner /></div>
+  <div hidden={view !== "reviewer"}><Reviewer /></div>
+  {view === "channel" && <Channel />}
+</main>
         </div>
       </div>
     </>

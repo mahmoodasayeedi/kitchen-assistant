@@ -3,6 +3,7 @@ import { CHANNEL_NAME, CHANNEL_URL, VIDEOS } from "../videos";
 
 export default function Channel() {
   const [playing, setPlaying] = useState(null);
+  const [failed, setFailed] = useState({});
 
   return (
     <div className="chatpage">
@@ -23,8 +24,22 @@ export default function Channel() {
                 allowFullScreen
               />
             ) : (
-              <button className="thumb" onClick={() => setPlaying(v.id)} aria-label={`Play ${v.title}`}>
-                <img src={`https://i.ytimg.com/vi/${v.id}/hqdefault.jpg`} alt={v.title} loading="lazy" />
+              <button
+                className={`thumb ${failed[v.id] ? "nothumb" : ""}`}
+                onClick={() => setPlaying(v.id)}
+                aria-label={`Play ${v.title}`}
+              >
+                {failed[v.id] ? (
+                  <span className="thumbtitle">{v.title}</span>
+                ) : (
+                  <img
+                    src={`https://img.youtube.com/vi/${v.id}/hqdefault.jpg`}
+                    alt={v.title}
+                    loading="lazy"
+                    referrerPolicy="no-referrer"
+                    onError={() => setFailed((f) => ({ ...f, [v.id]: true }))}
+                  />
+                )}
                 <span className="playicon">▶</span>
               </button>
             )}
